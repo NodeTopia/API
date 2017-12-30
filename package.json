@@ -1,0 +1,36 @@
+{
+  "name": "nodetopia-api",
+  "version": "0.0.1",
+  "description": "API server - entry point to most of the system",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NodeTopia/API.git"
+  },
+  "author": "Tim <mangoraft@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NodeTopia/API/issues"
+  },
+  "homepage": "https://github.com/NodeTopia/API#readme",
+  "dependencies": {
+    "async": "^2.6.0",
+    "bcryptjs": "^2.4.3",
+    "connect-timeout": "^1.9.0",
+    "joi": "^13.0.2",
+    "minio": "^2.0.3",
+    "moniker": "^0.1.2",
+    "morgan": "^1.9.0",
+    "nconf": "^0.10.0",
+    "nodetopia-kue": "git+https://github.com/NodeTopia/Kue.git",
+    "nodetopia-lib": "git+https://github.com/NodeTopia/Lib.git",
+    "nodetopia-model": "git+https://github.com/NodeTopia/Model.git",
+    "raft-logger-redis": "^0.2.16",
+    "request": "^2.83.0",
+    "restify": "^4.3.0"
+  }
+}
