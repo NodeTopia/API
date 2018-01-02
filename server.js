@@ -95,12 +95,12 @@ plugins.push(function(req, res, next) {
 	next();
 });
 plugins.push(morgan('tiny', {
-	stream : logger.create({
-		source : 'system',
-		channel : 'api.1',
-		session : nconf.logSession,
-		bufferSize : 1
-	})
+	//stream : logger.create({
+	//	source : 'system',
+	//	channel : 'api.1',
+	//	session : nconf.logSession,
+	//	bufferSize : 1
+	//})
 }));
 
 server.use(plugins);

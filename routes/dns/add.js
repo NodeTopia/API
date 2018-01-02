@@ -29,12 +29,12 @@ routes.push({
 		data.organization = req.organization._id;
 		data.name = req.params.name;
 		data.type = req.params.type;
-console.log(data)
 
 		dns.add(data, function(err, result) {
 			if (err) {
 				return next(new restify.errors[err.type||'InternalError'](err.message || err));
 			}
+
 			res.json({
 				status : "success",
 				result : {
