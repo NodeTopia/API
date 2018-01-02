@@ -41,6 +41,9 @@ routes.push({
 				certificate : domain.tls.cert + domain.tls.chain,
 				key : domain.tls.privkey
 			}, function(err, result) {
+				if (err) {
+					return next(new restify.errors[err.type||'InternalError'](err.message || err));
+				}
 				res.json({
 					status : "success",
 					result : {

@@ -46,7 +46,10 @@ routes.push({
 				host : host,
 				port : port
 			}, function(err, result) {
-				console.log(err)
+				if (err) {
+					return next(new restify.errors.InternalError(err.message || err));
+				}
+
 				res.json({
 					status : "success",
 					result : {

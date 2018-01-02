@@ -68,6 +68,9 @@ routes.push({
 						metricSession : metricSession,
 						logSession : logSession
 					}, function(err, result) {
+						if (err) {
+							return next(new restify.errors[err.type||'InternalError'](err.message || err));
+						}
 						res.json({
 							status : "success",
 							result : {

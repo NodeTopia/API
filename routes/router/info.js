@@ -40,6 +40,9 @@ routes.push({
 			req.kue.router.info({
 				url : domain.url
 			}, function(err, result) {
+				if (err) {
+					return next(new restify.errors[err.type||'InternalError'](err.message || err));
+				}
 				res.json({
 					status : "success",
 					result : {
