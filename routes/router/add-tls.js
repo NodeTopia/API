@@ -33,9 +33,14 @@ routes.push({
 				return next(new restify.errors.InternalError(err.message || err));
 			}
 
-			if (!domain) {
-				return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
-			}
+            if (!domain) {
+                return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
+            }
+
+            if (!domain.tls) {
+                return next(new restify.errors.NotFoundError('Domain ' + url + ' TLS not already'));
+            }
+
 			req.kue.router.add.tls({
 				url : domain.url,
 				certificate : domain.tls.cert + domain.tls.chain,

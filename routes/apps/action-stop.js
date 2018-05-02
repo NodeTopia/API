@@ -63,10 +63,7 @@ routes.push({
 					};
 				}), function(err) {
 					if (err) {
-						return res.json({
-							status : "falure",
-							error : err
-						}, 500);
+                        return next(new restify.errors.InternalError(err.message || err));
 					}
 					res.send(200);
 				});

@@ -21,7 +21,7 @@
     "async": "^2.6.0",
     "bcryptjs": "^2.4.3",
     "connect-timeout": "^1.9.0",
-    "joi": "^13.0.2",
+    "joi": "^13.2.0",
     "minio": "^2.0.3",
     "moniker": "^0.1.2",
     "morgan": "^1.9.0",
@@ -30,7 +30,7 @@
     "nodetopia-lib": "git+https://github.com/NodeTopia/Lib.git",
     "nodetopia-model": "git+https://github.com/NodeTopia/Model.git",
     "raft-logger-redis": "^0.2.16",
-    "request": "^2.83.0",
-    "restify": "^4.3.0"
+    "request": "^2.85.0",
+    "restify": "^4.3.3"
   }
 }

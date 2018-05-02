@@ -22,7 +22,7 @@ function createOrg(mongoose, user, cb) {
 			mongoose.Zone.findOne({
 
 			}, function(err, zone) {
-
+console.log(zone)
 				var quota = new mongoose.Quota({
 					zones : [zone],
 					plan : plan
