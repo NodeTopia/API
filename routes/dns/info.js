@@ -3,12 +3,10 @@
 /**
  * Routes
  */
+const tld = require('tldjs');
+const restify = require('restify');
 
-var async = require('async');
-var tld = require('tldjs');
-var restify = require('restify');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
 
 /**
  * GET /organization/:organization/zone
@@ -16,28 +14,27 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'GET',
-		paths : ['/dns'],
-		version : '1.0.0',
-		auth : true,
-		role : 'admin'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'GET',
+        paths: ['/dns'],
+        version: '1.0.0',
+        auth: true,
+        role: 'admin'
+    },
+    middleware: async function (req, res, next) {
+        let [err, dnsZone] = await req.to(req.mongoose.DNSZone.find({
+            organization: req.organization._id,
+        }))
 
-		req.mongoose.DNSZone.find({
-			organization : req.organization._id,
-		}, function(err, dnsZone) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
 
-			res.json({
-				status : "success",
-				result : dnsZone.map(req.format.DNSZone)
-			});
-		});
-	}
+        res.json({
+            status: "success",
+            result: dnsZone.map(req.format.DNSZone)
+        });
+    }
 });
 /**
  * GET /organization/:organization/zone
@@ -45,45 +42,41 @@ routes.push({
  */
 
 routes.push({
-	meta : {
-		method : 'GET',
-		paths : ['/dns/:type/:name'],
-		version : '1.0.0',
-		auth : true,
-		role : 'admin'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'GET',
+        paths: ['/dns/:type/:name'],
+        version: '1.0.0',
+        auth: true,
+        role: 'admin'
+    },
+    middleware: async function (req, res, next) {
 
-		var name = req.params.name.toLowerCase();
-		var type = req.params.type.toUpperCase();
-		var zone = tld.getDomain(name.replace('*.', ''));
+        let name = req.params.name.toLowerCase();
+        let type = req.params.type.toUpperCase();
+        let zone = tld.getDomain(name.replace('*.', ''));
 
-		req.mongoose.DNSZone.findOne({
-			organization : req.organization._id,
-			zone : zone
-		}, function(err, dnsZone) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
-			if (!dnsZone) {
-				return next(new restify.errors.ConflictError('dns does not exists'));
-			}
+        let [err, dnsZone] = await req.to(req.mongoose.DNSZone.findOne({
+            organization: req.organization._id,
+            zone: zone
+        }))
 
-			var records = [];
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+        if (!dnsZone) {
+            return next(new restify.errors.ConflictError('dns does not exists'));
+        }
 
-			for (var i = 0; i < dnsZone.records.length; i++) {
-				var record = dnsZone.records[i];
-				if (dnsZone.records[i].name == name && dnsZone.records[i].type == type) {
-					records.push(record);
-				}
-			};
-			res.json({
-				status : "success",
-				result : records.map(req.format.DNSRecord)
-			});
-		});
+        let records = dnsZone.records.filter(function (record) {
+            return record.name === name && record.type === type;
+        });
 
-	}
+        res.json({
+            status: "success",
+            result: records.map(req.format.DNSRecord)
+        });
+
+    }
 });
 
 /**

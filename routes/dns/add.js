@@ -5,10 +5,8 @@
  */
 
 var restify = require('restify');
-var tld = require('tldjs');
 var dns = require('nodetopia-lib/dns');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
 
 /**
  * GET /organization/:organization/zone
@@ -16,35 +14,33 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'POST',
-		paths : ['/dns/:type/:name'],
-		version : '1.0.0',
-		auth : true,
-		role : 'admin'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'POST',
+        paths: ['/dns/:type/:name'],
+        version: '1.0.0',
+        auth: true,
+        role: 'admin'
+    },
+    middleware: async function (req, res, next) {
 
-		var data = req.body;
-		data.organization = req.organization._id;
-		data.name = req.params.name;
-		data.type = req.params.type;
+        var data = req.body;
+        data.organization = req.organization._id;
+        data.name = req.params.name;
+        data.type = req.params.type;
 
-		dns.add(data, function(err, result) {
-			if (err) {
-				return next(new restify.errors[err.type||'InternalError'](err.message || err));
-			}
+        let [err, result] = await req.to(dns.add(data))
 
-			res.json({
-				status : "success",
-				result : {
-					zone : req.format.DNSZone(result.zone),
-					record : req.format.DNSRecord(result.record)
-				}
-			});
-		});
-
-	}
+        if (err) {
+            return next(new restify.errors[err.type || 'InternalError'](err.message || err));
+        }
+        res.json({
+            status: "success",
+            result: {
+                zone: req.format.DNSZone(result.zone),
+                record: req.format.DNSRecord(result.record)
+            }
+        });
+    }
 });
 
 /**

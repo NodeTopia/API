@@ -94,7 +94,8 @@ plugins.push(function(req, res, next) {
 	req.nconf = nconf;
 	req.kue = kue;
 	req.authenticate = authenticate;
-	req.format = format;
+    req.format = format;
+    req.to = to;
 	next();
 });
 plugins.push(morgan('tiny', {
@@ -169,10 +170,14 @@ var registerRoute = function(route) {
 
 		if (Array.isArray(route.middleware)) {
 			route.middleware.forEach(function(middleware) {
-				routes.push(middleware);
+				routes.push(function(req, res, next){
+                    middleware(req, res, next);
+				});
 			});
 		} else {
-			routes.push(route.middleware);
+			routes.push(function(req, res, next){
+                route.middleware(req, res, next);
+            });
 		}
 
 		server[routeMethod].apply(server, routes);
@@ -206,7 +211,12 @@ var listen = function(done) {
 		console.log();
 	});
 };
-
+function to(promise) {
+    return promise.then(data => {
+        return [null, data];
+    })
+        .catch(err => [err]);
+}
 if (!module.parent) {
 	listen();
 }
