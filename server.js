@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-mongoose.set('debug',true)
+//mongoose.set('debug',true)
 console.log(mongoose)
 var fs = require('fs');
 var url = require('url');
