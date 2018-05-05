@@ -6,7 +6,6 @@
 
 var restify = require('restify');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
 
 /**
  * GET /organization/:organization/zone
