@@ -14,55 +14,63 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'POST',
-		paths : ['/letsencrypt/dns'],
-		version : '1.0.0',
-		auth : true,
-		staff : true,
-		//role : 'admin'
-	},
-	middleware : function(req, res, next) {
-		var url = req.body.url;
-		var email = req.body.email || req.user.email;
+    meta: {
+        method: 'POST',
+        paths: ['/letsencrypt/dns'],
+        version: '1.0.0',
+        auth: true,
+        staff: true,
+        //role : 'admin'
+    },
+    middleware: async function (req, res, next) {
 
-		req.mongoose.Domain.findOne({
-			url : url,
-		}, function(err, domain) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
+        let {
+            url,
+            email = req.user.email
+        } = req.body
 
-			if (!domain) {
-				return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
-			}
-			req.kue.le.dns({
-				domain : url,
-				email : email
-			}, function(err, certs) {
-				if (err) {
-					return next(new restify.errors.InternalError(err.message || err));
-				}
-				domain.tls = certs._id;
 
-				domain.save(function(err) {
-					if (err) {
-						return next(new restify.errors.InternalError(err.message || err));
-					}
-					req.kue.router.add.tls({
-						url : url,
-						certificate : certs.cert + certs.chain,
-						key : certs.privkey
-					});
-					res.json({
-						status : "success",
-						result : certs
-					});
-				});
+        let err, domain, certs;
 
-			});
-		});
-	}
+        [err, domain] = await req.to(req.mongoose.Domain.findOne({
+            url: url,
+        }))
+
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        if (!domain) {
+            return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
+        }
+
+        [err, certs] = await req.to(req.kue.le.dns({
+            domain: url,
+            email: email
+        }))
+
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        domain.tls = certs._id;
+
+        try {
+            await  domain.save()
+        } catch (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        req.kue.router.add.tls({
+            url: url,
+            certificate: certs.cert + certs.chain,
+            key: certs.privkey
+        })
+        res.json({
+            status: "success",
+            result: certs
+        });
+    }
 });
 /**
  * Export

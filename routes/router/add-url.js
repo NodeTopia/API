@@ -5,9 +5,7 @@
  */
 
 var restify = require('restify');
-var async = require('async');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
 
 /**
  * GET /organization/:organization/zone
@@ -15,75 +13,79 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'POST',
-		paths : ['/router'],
-		version : '1.0.0',
-		auth : true,
-		staff : true,
-		//role : 'admin'
-	},
-	middleware : function(req, res, next) {
-		var url = req.body.url;
-		var name = req.body.name || req.nconf.get('name');
-		var organization = req.body.organization || req.nconf.get('name');
-		var metricSession = req.body.metricSession || req.nconf.get('metricSession');
-		var logSession = req.body.logSession || req.nconf.get('logSession');
+    meta: {
+        method: 'POST',
+        paths: ['/router'],
+        version: '1.0.0',
+        auth: true,
+        staff: true,
+        //role : 'admin'
+    },
+    middleware: async function (req, res, next) {
+        let {
+            url,
+            name = req.nconf.get('name'),
+            organization = req.nconf.get('name'),
+            metricSession = req.nconf.get('metricSession'),
+            logSession = req.nconf.get('logSession')
+        } = req.body;
 
-		req.mongoose.Domain.findOne({
-			url : url,
-		}, function(err, domain) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
+        let err, domain, tls, result;
 
-			if (!domain) {
-				domain = new req.mongoose.Domain({
-					url : url
-				});
-			} else {
-				return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
-			}
+        [err, domain] = await req.to(req.mongoose.Domain.findOne({
+            url: url,
+        }));
 
-			req.mongoose.TLS.findOne({
-				subject : url,
-			}, function(err, tls) {
-				if (err) {
-					return next(new restify.errors.InternalError(err.message || err));
-				}
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
 
-				if (tls) {
-					domain.tls = tls._id;
-				}
+        if (!domain) {
+            domain = new req.mongoose.Domain({
+                url: url
+            });
+        } else {
+            return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
+        }
 
-				domain.save(function(err) {
-					if (err) {
-						return next(new restify.errors.InternalError(err.message || err));
-					}
+        [err, tls] = await req.to(req.mongoose.TLS.findOne({
+            subject: url,
+        }));
 
-					req.kue.router.add.url({
-						url : domain.url,
-						organization : organization,
-						name : name,
-						metricSession : metricSession,
-						logSession : logSession
-					}, function(err, result) {
-						if (err) {
-							return next(new restify.errors[err.type||'InternalError'](err.message || err));
-						}
-						res.json({
-							status : "success",
-							result : {
-								domain : domain,
-								result : result
-							}
-						});
-					});
-				});
-			});
-		});
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
 
-	}
+        if (tls) {
+            domain.tls = tls._id;
+        }
+
+        try {
+            await domain.save()
+        } catch (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        [err, result] = await req.to(req.kue.router.add.url({
+            url: domain.url,
+            organization: organization,
+            name: name,
+            metricSession: metricSession,
+            logSession: logSession
+        }));
+
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        res.json({
+            status: "success",
+            result: {
+                domain: domain,
+                result: result
+            }
+        });
+    }
 });
 
 /**

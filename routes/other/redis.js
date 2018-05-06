@@ -22,7 +22,7 @@ routes.push({
         //role : 'admin'
     },
     middleware: async function (req, res, next) {
-        let [err, redis] = await req.to(req.req.mongoose.Redis.find())
+        let [err, redis] = await req.to(req.mongoose.Redis.find())
 
         if (err) {
             return next(new restify.errors.InternalError(err.message || err));
@@ -50,7 +50,7 @@ routes.push({
     middleware: async function (req, res, next) {
         let {type} = req.params;
 
-        let [err, redis] = await req.to(req.req.mongoose.Redis.find({
+        let [err, redis] = await req.to(req.mongoose.Redis.find({
             type: type
         }))
 
@@ -88,7 +88,7 @@ routes.push({
         } = req.body
 
 
-        let [err, redis] = await req.to(req.req.mongoose.Redis.findOne({
+        let [err, redis] = await req.to(req.mongoose.Redis.findOne({
             type: type,
             host: host,
             port: port,
@@ -144,7 +144,7 @@ routes.push({
         } = req.body
 
 
-        let [err, redis] = await req.to(req.req.mongoose.Redis.findOne({
+        let [err, redis] = await req.to(req.mongoose.Redis.findOne({
             type: type,
             host: host,
             port: port,
