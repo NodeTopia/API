@@ -6,7 +6,6 @@
 
 var restify = require('restify');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
 
 /**
  * GET /organization/:organization
@@ -14,46 +13,69 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'POST',
-		paths : ['/organization/:organization/member'],
-		version : '1.0.0',
-		auth : true,
-		role : 'admin'
-	},
-	middleware : function(req, res, next) {
-		var email = req.body.email;
-		var roleName = req.body.role;
+    meta: {
+        method: 'POST',
+        paths: ['/organization/:organization/member'],
+        version: '1.0.0',
+        auth: true,
+        role: 'admin'
+    },
+    middleware: async function (req, res, next) {
 
-		var organization = req.organization;
+        let {
+            email,
+            role: roleName
+        } = req.body
 
-		console.log(organization.name, email, roleName)
 
-		for (var i = 0,
-		    j = organization.membership.length; i < j; i++) {
-			if (organization.membership[i].user.email == email) {
-				return next(new restify.errors.NotFoundError('User is already a member'));
-			}
-		};
+        let organization = req.organization,
+            err,
+            role,
+            user;
 
-		mongoose.Roles.findOne({
-			name : roleName
-		}, function(err, role) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
-			if (!role) {
-				return next(new restify.errors.NotFoundError('role ' + roleName + ' not found'));
-			}
-			organization.membership.push({
-				user : res.user,
-				role : role
-			});
-			organization.save(function(){
-				
-			})
-		});
-	}
+
+        for (let i = 0,
+                 j = organization.membership.length; i < j; i++) {
+            if (organization.membership[i].user.email === email) {
+                return next(new restify.errors.ConflictError('User is already a member'));
+            }
+        }
+
+        [err, role] = await req.to(req.mongoose.Roles.findOne({
+            name: roleName
+        }))
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+        if (!role) {
+            return next(new restify.errors.NotFoundError('role ' + roleName + ' not found'));
+        }
+
+
+        [err, user] = await req.to(req.mongoose.User.findOne({
+            email: email
+        }))
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+        if (!user) {
+            return next(new restify.errors.NotFoundError('user ' + email + ' not found'));
+        }
+
+        organization.membership.push({
+            user: user,
+            role: role
+        });
+        try {
+            await organization.save();
+            res.json({
+                status: "success",
+                result: req.format.organization(req.organization)
+            });
+        } catch (err) {
+            next(new restify.errors.InternalError(err.message || err));
+        }
+    }
 });
 
 /**

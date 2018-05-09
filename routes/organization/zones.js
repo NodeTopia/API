@@ -6,7 +6,6 @@
 
 var restify = require('restify');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
 
 /**
  * GET /organization/:organization/zones
@@ -14,19 +13,19 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'GET',
-		paths : ['/organization/:organization/zones'],
-		version : '1.0.0',
-		auth : true,
-		role : 'member'
-	},
-	middleware : function(req, res, next) {
-		res.json({
-			status : "success",
-			result : req.organization.quota.zones.map(req.format.zone)
-		});
-	}
+    meta: {
+        method: 'GET',
+        paths: ['/organization/:organization/zones'],
+        version: '1.0.0',
+        auth: true,
+        role: 'member'
+    },
+    middleware: function (req, res, next) {
+        res.json({
+            status: "success",
+            result: req.organization.quota.zones.map(req.format.zone)
+        });
+    }
 });
 /**
  * PUT /organization/:organization/zones
@@ -34,40 +33,41 @@ routes.push({
  */
 
 routes.push({
-	meta : {
-		method : 'PUT',
-		paths : ['/organization/:organization/zones'],
-		version : '1.0.0',
-		auth : true,
-		role : 'admin'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'PUT',
+        paths: ['/organization/:organization/zones'],
+        version: '1.0.0',
+        auth: true,
+        role: 'admin'
+    },
+    middleware: async function (req, res, next) {
 
-		var name = req.body.name;
+        let {name} = req.body;
 
-		req.mongoose.Zone.findOne({
-			name : name
-		}, function(err, zone) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message||err));
-			}
-			if (!zone) {
-				return next(new restify.errors.NotFoundError('Zone ' + name + ' not found'));
-			}
-			
-			req.organization.quota.zones.push(zone);
-			
-			req.organization.quota.save(function(err) {
-				if (err) {
-					return next(new restify.errors.InternalError(err.message||err));
-				}
-				res.json({
-					status : "success",
-					result : req.organization.quota.zones.map(req.format.zone)
-				});
-			});
-		});
-	}
+        let [err, zone] = await req.to(req.mongoose.Zone.findOne({
+            name: name
+        }))
+
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+        if (!zone) {
+            return next(new restify.errors.NotFoundError('Zone ' + name + ' not found'));
+        }
+
+        req.organization.quota.zones.push(zone);
+
+
+        try {
+            await req.organization.quota.save()
+            res.json({
+                status: "success",
+                result: req.organization.quota.zones.map(req.format.zone)
+            });
+        } catch (err) {
+            next(new restify.errors.InternalError(err.message || err));
+        }
+    }
 });
 /**
  * DEL /organization/:organization/zones/:name
@@ -75,35 +75,35 @@ routes.push({
  */
 
 routes.push({
-	meta : {
-		method : 'DEL',
-		paths : ['/organization/:organization/zones/:name'],
-		version : '1.0.0',
-		auth : true,
-		role : 'admin'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'DEL',
+        paths: ['/organization/:organization/zones/:name'],
+        version: '1.0.0',
+        auth: true,
+        role: 'admin'
+    },
+    middleware: async function (req, res, next) {
 
-		var name = req.params.name;
+        let {name} = req.body;
 
-		for (var i = 0,
-		    j = req.organization.quota.zones.length; i < j; i++) {
-			if (req.organization.quota.zones[i].name == name) {
-				req.organization.quota.zones.splice(i, 1);
-				break;
-			}
-		};
+        for (let i = 0,
+                 j = req.organization.quota.zones.length; i < j; i++) {
+            if (req.organization.quota.zones[i].name === name) {
+                req.organization.quota.zones.splice(i, 1);
+                break;
+            }
+        }
 
-		req.organization.quota.save(function(err) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message||err));
-			}
-			res.json({
-				status : "success",
-				result : req.organization.quota.zones.map(req.format.zone)
-			});
-		});
-	}
+        try {
+            await req.organization.quota.save()
+            res.json({
+                status: "success",
+                result: req.organization.quota.zones.map(req.format.zone)
+            });
+        } catch (err) {
+            next(new restify.errors.InternalError(err.message || err));
+        }
+    }
 });
 /**
  * Export
