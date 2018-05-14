@@ -13,64 +13,63 @@ var routes = [];
  */
 
 routes.push({
-	meta : {
-		method : 'DEL',
-		paths : ['/organization/:organization/apps/:name/action', '/apps/:name/action'],
-		version : '1.0.0',
-		auth : true,
-		role : 'collaborator'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'DEL',
+        paths: ['/organization/:organization/apps/:name/action', '/apps/:name/action'],
+        version: '1.0.0',
+        auth: true,
+        role: 'collaborator'
+    },
+    middleware: async function (req, res, next) {
 
-		var name = req.params.name;
 
-		req.mongoose.App.findOne({
-			organization : req.organization._id,
-			name : name
-		}, function(err, app) {
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
+        let {name} = req.params;
+        let err,
+            app,
+            containers;
 
-			if (!app) {
-				return next(new restify.errors.NotFoundError('Application ' + name + ' not found'));
-			}
-			req.mongoose.Container.find({
-				reference : app._id,
-				$or : [{
-					'state' : 'RUNNING'
-				}, {
-					'state' : 'STARTING'
-				}, {
-					'state' : 'INITIALIZING'
-				}],
-				type : {
-					$nin : ['addon', 'build']
-				}
-			}, function(err, containers) {
-				if (err) {
-					return next(new restify.errors.InternalError(err.message || err));
-				}
+        [err, app] = await req.to(req.mongoose.App.findOne({
+            organization: req.organization._id,
+            name: name
+        }))
 
-				async.parallel(containers.map(function(container) {
-					return function(next) {
-						var stop = req.kue.jobs.create('fleet.container.stop', {
-							container : container._id
-						});
-						stop.on('complete', next.bind(null, null));
-						stop.on('failed', next);
-						stop.save();
-					};
-				}), function(err) {
-					if (err) {
-                        return next(new restify.errors.InternalError(err.message || err));
-					}
-					res.send(200);
-				});
-			});
-		});
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
 
-	}
+        if (!app) {
+            return next(new restify.errors.NotFoundError('Application ' + name + ' not found'));
+        }
+        [err, containers] = await req.to(req.mongoose.Container.find({
+            reference: app._id,
+            $or: [{
+                'state': 'RUNNING'
+            }, {
+                'state': 'STARTING'
+            }, {
+                'state': 'INITIALIZING'
+            }],
+            type: {
+                $nin: ['addon', 'build']
+            }
+        }))
+
+
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        try {
+            await Promise.all(containers.map(function (container) {
+                return req.kue.fleet.container.stop({
+                    container: container._id
+                })
+            }))
+            res.send(200);
+        } catch (err) {
+            next(new restify.errors.InternalError(err.message || err));
+        }
+    }
 });
 
 /**

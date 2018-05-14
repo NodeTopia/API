@@ -21,7 +21,7 @@
     "async": "^2.6.0",
     "bcryptjs": "^2.4.3",
     "connect-timeout": "^1.9.0",
-    "joi": "^13.2.0",
+    "joi": "^13.3.0",
     "minio": "^2.0.3",
     "moniker": "^0.1.2",
     "morgan": "^1.9.0",

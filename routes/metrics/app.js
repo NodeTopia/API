@@ -15,7 +15,7 @@ var routes = [];
  * Version: 1.0.0
  */
 function buildQuery(target, query) {
-	return 'http://192.168.1.43:31843/render/?' + querystring.stringify({
+	return 'http://163.172.157.165:31843/render/?' + querystring.stringify({
 		target : target,
 		from : query.from || '-12hours',
 		until : query.until || '-1min',

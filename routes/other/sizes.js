@@ -20,7 +20,7 @@ routes.push({
         auth: true
     },
     middleware: async function (req, res, next) {
-        let [err, sizes] = await req.to(req.req.mongoose.Size.find())
+        let [err, sizes] = await req.to(req.mongoose.Size.find())
 
         if (err) {
             return next(new restify.errors.InternalError(err.message || err));
@@ -47,7 +47,7 @@ routes.push({
     middleware: async function (req, res, next) {
         let {name} = req.params;
 
-        let [err, size] = await req.to(req.req.mongoose.Size.findOne({
+        let [err, size] = await req.to(req.mongoose.Size.findOne({
             name: name
         }))
 

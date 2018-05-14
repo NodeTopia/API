@@ -6,7 +6,7 @@
 
 var restify = require('restify');
 var routes = [];
-var select = 'is_active created_at updated_at name logSession metricSession maintenance url domains';
+var select = '-organization';
 
 /**
  * GET /organization/:organization/apps
@@ -14,29 +14,29 @@ var select = 'is_active created_at updated_at name logSession metricSession main
  */
 
 routes.push({
-	meta : {
-		method : 'GET',
-		paths : ['/organization/:organization/apps', '/apps'],
-		version : '1.0.0',
-		auth : true,
-		role : 'member'
-	},
-	middleware : function(req, res, next) {
-		req.mongoose.App.find({
-			organization : req.organization._id
-		}, select, function(err, apps) {
+    meta: {
+        method: 'GET',
+        paths: ['/organization/:organization/apps', '/apps'],
+        version: '1.0.0',
+        auth: true,
+        role: 'member'
+    },
+    middleware: async function (req, res, next) {
 
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
 
-			res.json({
-				status : "success",
-				result : apps.map(req.format.app)
-			});
-		});
+        let [err, apps] = await req.to(req.mongoose.App.find({
+            organization: req.organization._id
+        }, select));
 
-	}
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
+
+        res.json({
+            status: "success",
+            result: apps.map(req.format.app)
+        });
+    }
 });
 
 /**
@@ -45,37 +45,31 @@ routes.push({
  */
 
 routes.push({
-	meta : {
-		method : 'GET',
-		paths : ['/organization/:organization/apps/:name', '/apps/:name'],
-		version : '1.0.0',
-		auth : true,
-		role : 'member'
-	},
-	middleware : function(req, res, next) {
+    meta: {
+        method: 'GET',
+        paths: ['/organization/:organization/apps/:name', '/apps/:name'],
+        version: '1.0.0',
+        auth: true,
+        role: 'member'
+    },
+    middleware: async function (req, res, next) {
 
-		var name = req.params.name;
 
-		req.mongoose.App.findOne({
-			organization : req.organization._id,
-			name : name
-		},  function(err, app) {
+        let {name} = req.params;
+        let [err, app] = await req.to(req.mongoose.App.findOne({
+            organization: req.organization._id,
+            name: name
+        }, select));
 
-			if (err) {
-				return next(new restify.errors.InternalError(err.message || err));
-			}
+        if (err) {
+            return next(new restify.errors.InternalError(err.message || err));
+        }
 
-			if (!app) {
-				return next(new restify.errors.NotFoundError('Application ' + name + ' not found'));
-			}
-
-			res.json({
-				status : "success",
-				result : req.format.app(app, req.organization)
-			});
-		});
-
-	}
+        res.json({
+            status: "success",
+            result: req.format.app(app, req.organization)
+        });
+    }
 });
 
 /**
