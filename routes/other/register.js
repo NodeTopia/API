@@ -21,7 +21,9 @@ function createOrg(mongoose, user) {
                 mongoose.Roles.findOne({
                     name: 'admin'
                 }),
-                mongoose.Plans.findOne(),
+                mongoose.Plans.findOne({
+                    name: 'hobby'
+                }),
                 mongoose.Zone.findOne()
             ])
         } catch (err) {

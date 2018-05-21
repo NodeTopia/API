@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/NodeTopia/API#readme",
   "dependencies": {
-    "async": "^2.6.0",
+    "async": "^2.6.1",
     "bcryptjs": "^2.4.3",
     "connect-timeout": "^1.9.0",
     "joi": "^13.3.0",
@@ -30,7 +30,7 @@
     "nodetopia-lib": "git+https://github.com/NodeTopia/Lib.git#es6",
     "nodetopia-model": "git+https://github.com/NodeTopia/Model.git",
     "raft-logger-redis": "^0.2.16",
-    "request": "^2.85.0",
+    "request": "^2.87.0",
     "restify": "^4.3.3"
   }
 }

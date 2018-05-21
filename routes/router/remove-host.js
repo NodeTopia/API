@@ -45,6 +45,26 @@ routes.push({
             return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
         }
 
+        let _host = null;
+        for (let [i, h] in domain.hosts.entries()) {
+            if (h.host === host && h.port === port && h.name === name) {
+                domain.hosts.splice(i, 1);
+                h.active = false;
+                try {
+                    await Promise.all([domain.save(), h.save()])
+                } catch (err) {
+                    return next(new restify.errors.InternalError(err.message || err));
+                }
+                _host = h;
+                break;
+            }
+        }
+
+        if (!_host) {
+            return next(new restify.errors.NotFoundError('Host ' + url + ' already active'));
+        }
+
+
         [err, result] = await req.to(req.kue.router.remove.host({
             urls: [domain.url],
             name: name,
