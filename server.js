@@ -196,27 +196,23 @@ var setupRoutes = function(routeName) {
 
 ['test', 'apps', 'organization', 'addons', 'other', 'dns', 'router', 'letsencrypt', 'scaleway', 'fleet', 'metrics', 'mongodb'].forEach(setupRoutes);
 
-/**
- * Listen
- */
-
-var listen = function(done) {
-	server.listen(nconf.get('api:port'), function() {
-		if (done) {
-			return done();
-		}
-
-		console.log();
-		console.log('%s now listening on %s', nconf.get('api:name'), server.url);
-		console.log();
-	});
-};
 function to(promise) {
     return promise.then(data => {
         return [null, data];
     })
         .catch(err => [err]);
 }
-if (!module.parent) {
-	listen();
-}
+/**
+ * Listen
+ */
+
+
+server.listen(nconf.get('api:port'), function() {
+    if (done) {
+        return done();
+    }
+
+    console.log();
+    console.log('%s now listening on %s', nconf.get('api:name'), server.url);
+    console.log();
+});

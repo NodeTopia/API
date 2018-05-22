@@ -44,7 +44,7 @@ routes.push({
         if (!domain) {
             return next(new restify.errors.NotFoundError('Domain ' + url + ' not already'));
         }
-
+console.log(domain,req.body)
         let _host = null;
         for (let [i, h] in domain.hosts.entries()) {
             if (h.host === host && h.port === port && h.name === name) {
@@ -61,7 +61,7 @@ routes.push({
         }
 
         if (!_host) {
-            return next(new restify.errors.NotFoundError('Host ' + url + ' already active'));
+           // return next(new restify.errors.NotFoundError('Host ' + url + ' already active'));
         }
 
 

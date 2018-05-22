@@ -30,6 +30,8 @@ routes.push({
         var modified = false;
         var sizeModified = false;
         var processes = 0;
+        var cpu = 0;
+        var memory = 0;
 
         req.mongoose.App.findOne({
             'organization': req.organization._id,
@@ -62,6 +64,7 @@ routes.push({
                                 unit.quantity = request;
 
                                 processes += unit.quantity;
+
                                 next();
                             } else {
 
