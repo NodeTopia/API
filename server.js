@@ -208,9 +208,7 @@ function to(promise) {
 
 
 server.listen(nconf.get('api:port'), function() {
-    if (done) {
-        return done();
-    }
+
 
     console.log();
     console.log('%s now listening on %s', nconf.get('api:name'), server.url);
